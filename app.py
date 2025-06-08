@@ -1,33 +1,18 @@
 import os
-import requests
-
-MODEL_DIR = "models/pt_BR"
-MODEL_PATH = f"{MODEL_DIR}/pt_BR-faber-medium.onnx"
-CONFIG_PATH = f"{MODEL_DIR}/pt_BR-faber-medium.onnx.json"
-
-MODEL_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt_BR/pt_BR-faber-medium.onnx"
-CONFIG_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt_BR/pt_BR-faber-medium.onnx.json"
-
-os.makedirs(MODEL_DIR, exist_ok=True)
-
-def download_if_missing(url, path):
-    if not os.path.exists(path):
-        print(f"🔄 Baixando: {path}")
-        with open(path, "wb") as f:
-            f.write(requests.get(url).content)
-
-download_if_missing(MODEL_URL, MODEL_PATH)
-download_if_missing(CONFIG_URL, CONFIG_PATH)
-
+import hashlib
 from flask import Flask, request, jsonify, send_file
 import subprocess
-import os
-import uuid
 
 app = Flask(__name__)
 
-MODEL_PATH = "models/pt_BR/pt_BR-faber-medium.onnx"
-CONFIG_PATH = "models/pt_BR/pt_BR-faber-medium.onnx.json"
+MODEL_PATH = "models/pt_BR/pt_BR-edresson-low.onnx"
+CONFIG_PATH = "models/pt_BR/pt_BR-edresson-low.onnx.json"
+AUDIO_CACHE_DIR = "audio_cache"
+os.makedirs(AUDIO_CACHE_DIR, exist_ok=True)
+
+def text_to_filename(text):
+    # Cria um hash MD5 do texto para nomear o arquivo
+    return hashlib.md5(text.encode('utf-8')).hexdigest() + ".wav"
 
 @app.route("/tts", methods=["POST"])
 def tts():
@@ -36,21 +21,26 @@ def tts():
     if not text:
         return jsonify({"error": "Missing 'text'"}), 400
 
-    output_path = f"output_{uuid.uuid4().hex}.wav"
+    audio_file = os.path.join(AUDIO_CACHE_DIR, text_to_filename(text))
 
-    command = [
-        "python3", "piper/piper.py",
-        "--model", MODEL_PATH,
-        "--config", CONFIG_PATH,
-        "--output_file", output_path
-    ]
+    if not os.path.exists(audio_file):
+        # Se o áudio não existir, gera ele com o Piper
+        command = [
+            "python3", "piper/piper.py",
+            "--model", MODEL_PATH,
+            "--config", CONFIG_PATH,
+            "--output_file", audio_file
+        ]
 
-    try:
-        subprocess.run(command, input=text.encode(), check=True)
-    except subprocess.CalledProcessError as e:
-        return jsonify({"error": "Piper failed", "details": str(e)}), 500
+        try:
+            subprocess.run(command, input=text.encode(), check=True)
+        except subprocess.CalledProcessError as e:
+            return jsonify({"error": "Piper failed", "details": str(e)}), 500
 
-    return send_file(output_path, mimetype="audio/wav")
+    # Retorna o arquivo já gerado/cached
+    return send_file(audio_file, mimetype="audio/wav")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
+
