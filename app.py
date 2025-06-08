@@ -1,3 +1,23 @@
+import os
+import requests
+
+MODEL_DIR = "models/pt_BR"
+MODEL_PATH = f"{MODEL_DIR}/pt_BR-faber-medium.onnx"
+CONFIG_PATH = f"{MODEL_DIR}/pt_BR-faber-medium.onnx.json"
+
+MODEL_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt_BR/pt_BR-faber-medium.onnx"
+CONFIG_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt_BR/pt_BR-faber-medium.onnx.json"
+
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+def download_if_missing(url, path):
+    if not os.path.exists(path):
+        print(f"🔄 Baixando: {path}")
+        with open(path, "wb") as f:
+            f.write(requests.get(url).content)
+
+download_if_missing(MODEL_URL, MODEL_PATH)
+download_if_missing(CONFIG_URL, CONFIG_PATH)
 
 from flask import Flask, request, jsonify, send_file
 import subprocess
