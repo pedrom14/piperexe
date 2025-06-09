@@ -1,8 +1,6 @@
 Flask==2.3.2
-numpy==1.24.3
-torch==2.1.0+cpu
 soundfile
 TTS==0.21.1
---extra-index-url https://download.pytorch.org/whl/cpu
+
 
 
