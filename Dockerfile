@@ -1,23 +1,28 @@
-# Usa imagem oficial com PyTorch 2.1 CPU
-FROM pytorch/pytorch:2.1.0-cpu
+FROM python:3.10-slim
 
 WORKDIR /app
 
-# Instala dependências do sistema necessárias
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libsndfile1 libsndfile1-dev ffmpeg libsm6 libxext6 && \
-    rm -rf /var/lib/apt/lists/*
+    python3-distutils \
+    build-essential \
+    gcc \
+    libffi-dev \
+    libssl-dev \
+    libsndfile1 \
+    libsndfile1-dev \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copia tudo para o container
 COPY . /app
 
-# Atualiza pip e instala dependências restantes
-RUN pip install --upgrade pip && \
-    pip install Flask==2.3.2 soundfile TTS==0.21.1
+RUN python -m pip install --upgrade pip
+RUN pip install -r requirements.txt
 
-EXPOSE 5000
-CMD ["python3", "app.py"]
+EXPOSE 8000
 
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 
 
