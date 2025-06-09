@@ -24,7 +24,6 @@ def tts():
     audio_file = os.path.join(AUDIO_CACHE_DIR, text_to_filename(text))
 
     if not os.path.exists(audio_file):
-        # Se o áudio não existir, gera ele com o Piper
         command = [
             "python3", "piper/piper.py",
             "--model", MODEL_PATH,
@@ -33,14 +32,23 @@ def tts():
         ]
 
         try:
-            subprocess.run(command, input=text.encode(), check=True)
+            result = subprocess.run(
+                command,
+                input=text.encode(),
+                check=True,
+                capture_output=True,
+                text=True
+            )
         except subprocess.CalledProcessError as e:
-            return jsonify({"error": "Piper failed", "details": str(e)}), 500
+            return jsonify({
+                "error": "Piper failed",
+                "details": e.stderr
+            }), 500
 
-    # Retorna o arquivo já gerado/cached
     return send_file(audio_file, mimetype="audio/wav")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
