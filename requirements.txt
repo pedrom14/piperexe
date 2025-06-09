@@ -1,4 +1,7 @@
-Flask==2.3.2
+fastapi==0.100.0
+uvicorn[standard]==0.23.1
+torch==2.1.0+cpu
+numpy==1.24.3
 soundfile
 TTS==0.21.1
 
