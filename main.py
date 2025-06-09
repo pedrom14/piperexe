@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from piper_infer import PiperTTS
 from pydantic import BaseModel
 
@@ -21,9 +22,7 @@ def tts_api(req: TTSRequest):
         audio_path = tts.synthesize(text)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"TTS synthesis failed: {str(e)}")
-    return {
-        "audio_file": audio_path
-    }
+    return FileResponse(audio_path, media_type="audio/wav")
 
 
 
