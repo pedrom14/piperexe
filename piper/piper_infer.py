@@ -4,6 +4,7 @@ from TTS.tts.models.vits import Vits
 from TTS.utils.audio import AudioProcessor
 from TTS.utils.io import load_config
 import os
+import hashlib
 
 class PiperTTS:
     def __init__(self, model_path, config_path):
@@ -17,10 +18,9 @@ class PiperTTS:
         os.makedirs(self.cache_dir, exist_ok=True)
 
     def text_to_filename(self, text):
-        import hashlib
         return hashlib.md5(text.encode('utf-8')).hexdigest() + ".wav"
 
-    def synthesize(self, text):
+    def synthesize(self, text: str) -> str:
         filename = self.text_to_filename(text)
         filepath = os.path.join(self.cache_dir, filename)
         if os.path.exists(filepath):
@@ -33,3 +33,4 @@ class PiperTTS:
         wav = wav.cpu().numpy()
         sf.write(filepath, wav, self.ap.sample_rate)
         return filepath
+
